@@ -58,18 +58,20 @@ const data = [
     return main;
   };
 
+  const createButton = ({className, type, text}) => {
+    const button = document.createElement('button');
+    button.type = type;
+    button.textContent = text;
+    button.className = className;
+
+    return button;
+  };
+
   const createButtonsGroup = params => {
     const btnWrapper = document.createElement('div');
     btnWrapper.classList.add('btn-wrapper');
 
-    const btns = params.map(({className, type, text}) => {
-      const button = document.createElement('button');
-      button.type = type;
-      button.textContent = text;
-      button.className = className;
-
-      return button;
-    });
+    const btns = params.map(buttonParams => createButton(buttonParams));
 
     btnWrapper.append(...btns);
 
@@ -106,9 +108,16 @@ const data = [
     overlay.classList.add('form-overlay');
 
     const form = document.createElement('form');
+    const closeButton = createButton({
+      className: 'close',
+      type: 'button',
+    });
+
+    form.closeButton = closeButton;
+    form.append(closeButton);
+
     form.classList.add('form');
     form.insertAdjacentHTML('beforeend', `
-      <button class="close" type="button"></button>
       <h2 class"form-title">Добавить контакт</h2>
       <div class="form-group">
         <label class="form-label" for="name">Имя:</label>
@@ -217,13 +226,12 @@ const data = [
     tr.phoneLink = phoneLink;
     tdPhone.append(phoneLink);
 
-    const editButton = createButtonsGroup([
-      {
-        className: 'btn btn-primary bi bi-pencil-square',
-        type: 'button',
-        text: '',
-      },
-    ]).btns[0];
+    const editButton = createButton({
+      className: 'btn btn-primary bi bi-pencil-square',
+      type: 'button',
+      text: '',
+    });
+
     editButton.innerHTML = (`
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" 
     class="bi bi-pencil-square" viewBox="0 0 16 16">
@@ -266,6 +274,14 @@ const data = [
     });
   };
 
+  const openModal = (formOverlay) => {
+    formOverlay.classList.add('is-visible');
+  };
+
+  const closeModal = (formOverlay) => {
+    formOverlay.classList.remove('is-visible');
+  };
+
   const init = (selectorApp, title) => {
     const app = document.querySelector(selectorApp);
     const phoneBook = renderPhoneBook(app, title);
@@ -275,17 +291,14 @@ const data = [
     const allRow = renderContacts(list, data);
     hoverRow(allRow, logo);
 
-    btnAdd.addEventListener('click', () => {
-      formOverlay.classList.add('is-visible');
-    });
+    btnAdd.addEventListener('click', () => openModal(formOverlay));
 
     form.addEventListener('click', event => {
       event.stopPropagation();
     });
 
-    formOverlay.addEventListener('click', () => {
-      formOverlay.classList.remove('is-visible');
-    });
+    form.closeButton.addEventListener('click', () => closeModal(formOverlay));
+    formOverlay.addEventListener('click', () => closeModal(formOverlay));
   };
 
   window.phoneBookInit = init;
