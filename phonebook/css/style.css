@@ -47,8 +47,6 @@ body {
   margin-bottom: 30px;
 }
 
-
-
 .form {
   padding: 30px 50px;
   background-color: #fff;
@@ -129,4 +127,18 @@ body {
   background-color: #3E5E93;
   color: #fff;
   text-align: center;
+}
+
+.table td, .table th {
+  vertical-align: middle;
+}
+
+.filterable {
+  cursor: pointer;
+  color: #007bff;
+  text-decoration: underline;
+}
+
+.filterable:hover {
+  background-color: coral;
 }

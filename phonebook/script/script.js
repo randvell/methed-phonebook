@@ -89,8 +89,8 @@ const data = [
     thead.insertAdjacentHTML('beforeend', `
       <tr>
         <th class="delete">Удалить</th>
-        <th>Имя</th>
-        <th>Фамилия</th>
+        <th class="filterable">Имя</th>
+        <th class="filterable">Фамилия</th>
         <th>Телефон</th>
         <th></th>
       </tr>
@@ -99,6 +99,7 @@ const data = [
 
     table.append(thead, tbody);
     table.tbody = tbody;
+    table.thead = thead;
 
     return table;
   };
@@ -198,8 +199,10 @@ const data = [
 
     return {
       list: table.tbody,
+      thead: table.thead,
       logo,
       btnAdd: buttonGroup.btns[0],
+      btnDel: buttonGroup.btns[1],
       formOverlay: form.overlay,
       form: form.form,
     };
@@ -207,6 +210,7 @@ const data = [
 
   const createRow = ({name: firstName, surname, phone}) => {
     const tr = document.createElement('tr');
+    tr.classList.add('contact');
 
     const tdDel = document.createElement('td');
     tdDel.classList.add('delete');
@@ -274,31 +278,88 @@ const data = [
     });
   };
 
-  const openModal = (formOverlay) => {
-    formOverlay.classList.add('is-visible');
-  };
+  const sortRows = (index, order = 'desc') => {
+    const tbody = document.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const toggler = order === 'asc' ? -1 : 1;
 
-  const closeModal = (formOverlay) => {
-    formOverlay.classList.remove('is-visible');
+    rows.sort((a, b) => {
+      const nameA = a.cells[index].textContent.trim();
+      const nameB = b.cells[index].textContent.trim();
+      return nameA.localeCompare(nameB) * toggler;
+    });
+
+    tbody.innerHTML = '';
+    rows.forEach(row => {
+      tbody.appendChild(row);
+    });
   };
 
   const init = (selectorApp, title) => {
     const app = document.querySelector(selectorApp);
     const phoneBook = renderPhoneBook(app, title);
 
-    const {list, logo, btnAdd, formOverlay, form} = phoneBook;
+    const {
+      thead,
+      list,
+      logo,
+      btnAdd,
+      btnDel,
+      formOverlay,
+    } = phoneBook;
+
+    const openModal = () => {
+      formOverlay.classList.add('is-visible');
+    };
+
+    const closeModal = () => {
+      formOverlay.classList.remove('is-visible');
+    };
 
     const allRow = renderContacts(list, data);
     hoverRow(allRow, logo);
 
-    btnAdd.addEventListener('click', () => openModal(formOverlay));
+    btnAdd.addEventListener('click', () => openModal());
 
-    form.addEventListener('click', event => {
-      event.stopPropagation();
+    formOverlay.addEventListener('click', e => {
+      const target = e.target;
+      if (target === formOverlay || target.closest('.close')) {
+        closeModal();
+      }
     });
 
-    form.closeButton.addEventListener('click', () => closeModal(formOverlay));
-    formOverlay.addEventListener('click', () => closeModal(formOverlay));
+    thead.addEventListener('click', e => {
+      const target = e.target;
+      if (target.classList.contains('filterable')) {
+        const order = target.dataset.currentOrder === 'desc' ? 'asc' : 'desc';
+        target.dataset.currentOrder = order;
+
+        const parent = target.parentNode;
+        const columns = parent.querySelectorAll('th');
+        let index;
+        for (let i = 0; i < columns.length; i++) {
+          if (target === columns[i]) {
+            index = i;
+            break;
+          }
+        }
+
+        sortRows(index, order);
+      }
+    });
+
+    btnDel.addEventListener('click', () => {
+      document.querySelectorAll('.delete').forEach(del => {
+        del.classList.toggle('is-visible');
+      });
+    });
+
+    list.addEventListener('click', e => {
+      const target = e.target;
+      if (target.closest('.del-icon')) {
+        target.closest('.contact').remove();
+      }
+    });
   };
 
   window.phoneBookInit = init;
