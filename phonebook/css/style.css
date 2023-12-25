@@ -129,6 +129,10 @@ body {
   text-align: center;
 }
 
+.contact:nth-child(odd) {
+  background-color: lightcyan;
+}
+
 .table td, .table th {
   vertical-align: middle;
 }
