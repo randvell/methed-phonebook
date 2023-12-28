@@ -1,31 +1,26 @@
 'use strict';
 
-const data = [
-  {
-    name: 'Иван',
-    surname: 'Петров',
-    phone: '+79514545454',
-  },
-  {
-    name: 'Игорь',
-    surname: 'Семёнов',
-    phone: '+79999999999',
-  },
-  {
-    name: 'Семён',
-    surname: 'Иванов',
-    phone: '+79800252525',
-  },
-  {
-    name: 'Мария',
-    surname: 'Попова',
-    phone: '+79876543210',
-  },
-];
-
 {
+  const getStorage = (key) => {
+    const value = localStorage.getItem(key);
+
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value || [];
+    }
+  };
+
+  const setStorage = (key, value) => {
+    localStorage.setItem(key, JSON.stringify(value));
+  };
+
+  const removeStorage = (key) => {
+    localStorage.removeItem(key);
+  };
+
   const addContactData = contact => {
-    data.push(contact);
+    setStorage(contact.phone, contact);
     console.log();
   };
 
@@ -63,7 +58,7 @@ const data = [
     return main;
   };
 
-  const createButton = ({className, type, text}) => {
+  const createButton = ({ className, type, text }) => {
     const button = document.createElement('button');
     button.type = type;
     button.textContent = text;
@@ -193,7 +188,7 @@ const data = [
     ]);
 
     const table = createTable();
-    const {form, overlay} = createForm();
+    const { form, overlay } = createForm();
 
     header.headerContainer.append(logo);
     main.mainContainer.append(buttonGroup.btnWrapper, table, overlay);
@@ -213,7 +208,7 @@ const data = [
     };
   };
 
-  const createRow = ({name: firstName, surname, phone}) => {
+  const createRow = ({ name: firstName, surname, phone }) => {
     const tr = document.createElement('tr');
     tr.classList.add('contact');
 
@@ -229,6 +224,8 @@ const data = [
     tdSurname.textContent = surname;
 
     const tdPhone = document.createElement('td');
+    tdPhone.classList.add('phone');
+
     const phoneLink = document.createElement('a');
     phoneLink.href = `tel:${phone}`;
     phoneLink.textContent = phone;
@@ -264,8 +261,8 @@ const data = [
     return tr;
   };
 
-  const renderContacts = (elem, data) => {
-    const allRow = data.map(createRow);
+  const renderContacts = (elem, contacts) => {
+    const allRow = contacts.map(createRow);
     elem.append(...allRow);
     return allRow;
   };
@@ -318,7 +315,7 @@ const data = [
       }
     });
 
-    return {closeModal};
+    return { closeModal };
   };
 
   const deleteControl = (btnDel, list) => {
@@ -330,6 +327,13 @@ const data = [
 
     list.addEventListener('click', e => {
       const target = e.target;
+      // todo: возможно есть способ получать это значение получше
+      const phone = target.parentNode?.parentNode
+          ?.querySelector('.phone a')
+          ?.innerText;
+
+      removeStorage(phone);
+
       if (target.closest('.del-icon')) {
         target.closest('.contact').remove();
       }
@@ -375,6 +379,19 @@ const data = [
     });
   };
 
+  const loadContactsFromStorage = () => {
+    const contacts = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      const value = getStorage(key);
+      if (value.phone) {
+        contacts.push(value);
+      }
+    }
+
+    return contacts;
+  };
+
   const init = (selectorApp, title) => {
     const app = document.querySelector(selectorApp);
 
@@ -388,8 +405,9 @@ const data = [
       form,
     } = renderPhoneBook(app, title);
 
-    const allRow = renderContacts(list, data);
-    const {closeModal} = modalControl(btnAdd, formOverlay);
+    const contacts = loadContactsFromStorage();
+    const allRow = renderContacts(list, contacts);
+    const { closeModal } = modalControl(btnAdd, formOverlay);
     hoverRow(allRow, logo);
 
     deleteControl(btnDel, list);
