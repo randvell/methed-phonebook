@@ -261,26 +261,13 @@
     return tr;
   };
 
-  const renderContacts = (elem, contacts) => {
-    const allRow = contacts.map(createRow);
-    elem.append(...allRow);
-    return allRow;
-  };
+  const sortRows = () => {
+    const sort = getStorage('sort');
+    if (!sort) {
+      return;
+    }
 
-  const hoverRow = (allRow, logo) => {
-    const text = logo.textContent;
-
-    allRow.forEach(contact => {
-      contact.addEventListener('mouseenter', () => {
-        logo.textContent = contact.phoneLink.textContent;
-      });
-      contact.addEventListener('mouseleave', () => {
-        logo.textContent = text;
-      });
-    });
-  };
-
-  const sortRows = (index, order = 'desc') => {
+    const { index, order } = sort;
     const tbody = document.querySelector('tbody');
     const rows = Array.from(tbody.querySelectorAll('tr'));
     const toggler = order === 'asc' ? -1 : 1;
@@ -294,6 +281,27 @@
     tbody.innerHTML = '';
     rows.forEach(row => {
       tbody.appendChild(row);
+    });
+  };
+
+  const renderContacts = (elem, contacts) => {
+    const allRow = contacts.map(createRow);
+    elem.append(...allRow);
+    sortRows();
+
+    return allRow;
+  };
+
+  const hoverRow = (allRow, logo) => {
+    const text = logo.textContent;
+
+    allRow.forEach(contact => {
+      contact.addEventListener('mouseenter', () => {
+        logo.textContent = contact.phoneLink.textContent;
+      });
+      contact.addEventListener('mouseleave', () => {
+        logo.textContent = text;
+      });
     });
   };
 
@@ -329,8 +337,8 @@
       const target = e.target;
       // todo: возможно есть способ получать это значение получше
       const phone = target.parentNode?.parentNode
-          ?.querySelector('.phone a')
-          ?.innerText;
+        ?.querySelector('.phone a')
+        ?.innerText;
 
       removeStorage(phone);
 
@@ -357,7 +365,8 @@
           }
         }
 
-        sortRows(index, order);
+        setStorage('sort', { index, order });
+        sortRows();
       }
     });
   };
@@ -407,6 +416,7 @@
 
     const contacts = loadContactsFromStorage();
     const allRow = renderContacts(list, contacts);
+
     const { closeModal } = modalControl(btnAdd, formOverlay);
     hoverRow(allRow, logo);
 
